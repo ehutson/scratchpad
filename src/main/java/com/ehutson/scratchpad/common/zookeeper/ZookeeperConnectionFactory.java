@@ -1,10 +1,12 @@
-package com.ehutson.scratchpad.zookeeper;
+package com.ehutson.scratchpad.common.zookeeper;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.ehutson.scratchpad.common.zookeeper.impl.ZookeeperClientImpl;
 
 
 
@@ -33,6 +35,6 @@ public class ZookeeperConnectionFactory {
 				options.getConnectionTimeoutMs(), 
 				retryPolicy);
 		
-		return new ZookeeperClient(framework);
+		return new ZookeeperClientImpl(framework);
 	}
 }

@@ -1,6 +1,7 @@
 package com.ehutson.test1;
 
-import org.rocksdb.*;
+import org.rocksdb.Options;
+import org.rocksdb.RocksDB;
 
 
 public class RocksDbSampleSimple {

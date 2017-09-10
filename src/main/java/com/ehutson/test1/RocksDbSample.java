@@ -1,8 +1,16 @@
 package com.ehutson.test1;
 
-import java.lang.IllegalArgumentException;
-
-import org.rocksdb.*;
+import org.rocksdb.BlockBasedTableConfig;
+import org.rocksdb.BloomFilter;
+import org.rocksdb.CompactionStyle;
+import org.rocksdb.CompressionType;
+import org.rocksdb.Filter;
+import org.rocksdb.HashLinkedListMemTableConfig;
+import org.rocksdb.Options;
+import org.rocksdb.RateLimiter;
+import org.rocksdb.ReadOptions;
+import org.rocksdb.RocksDB;
+import org.rocksdb.RocksDBException;
 import org.rocksdb.util.SizeUnit;
 
 public class RocksDbSample {
@@ -48,6 +56,8 @@ public class RocksDbSample {
 					db.delete("hello".getBytes());
 					final byte[] value2 = db.get("hello".getBytes());
 					System.out.println("hello, " + value2.toString());
+					
+					db.close();
 				} catch(final RocksDBException e) {
 					System.err.println(e);
 				}

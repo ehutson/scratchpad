@@ -1,4 +1,4 @@
-package com.ehutson.scratchpad.zookeeper.impl;
+package com.ehutson.scratchpad.common.zookeeper.impl;
 
 import java.io.IOException;
 
@@ -7,7 +7,7 @@ import org.apache.curator.framework.api.transaction.CuratorOp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ehutson.scratchpad.zookeeper.ZookeeperClient;
+import com.ehutson.scratchpad.common.zookeeper.ZookeeperClient;
 
 public class ZookeeperClientImpl implements ZookeeperClient {
 

@@ -14,18 +14,18 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
-		
+
 		<rocksdb.version>5.5.1</rocksdb.version>
 		<netty.version>4.1.15.Final</netty.version>
 		<curator.version>4.0.0</curator.version>
 		<zookeeper.version>3.4.10</zookeeper.version>
-		
+
 		<logback.version>1.2.3</logback.version>
 		<slf4j.version>1.7.25</slf4j.version>
-		
+
 		<testng.version>6.11</testng.version>
 		<junit.version>4.12</junit.version>
-		
+
 	</properties>
 
 	<dependencies>
@@ -34,13 +34,13 @@
 			<artifactId>rocksdbjni</artifactId>
 			<version>${rocksdb.version}</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-all</artifactId>
 			<version>${netty.version}</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.apache.curator</groupId>
 			<artifactId>curator-recipes</artifactId>
@@ -52,32 +52,21 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.apache.zookeeper</groupId>
 			<artifactId>zookeeper</artifactId>
 			<version>${zookeeper.version}</version>
 		</dependency>
-		
+
+		<!-- 
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
 			<version>${logback.version}</version>
 		</dependency>
-		
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-core</artifactId>
-			<version>${logback.version}</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>${slf4j.version}</version>
-		</dependency>
-		
-		
+		 -->
+
 		<dependency>
 			<groupId>org.testng</groupId>
 			<artifactId>testng</artifactId>
@@ -92,7 +81,6 @@
 
 
 	<build>
-		<!-- To define the plugin version in your parent POM -->
 		<pluginManagement>
 			<plugins>
 				<plugin>
@@ -102,8 +90,86 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
-		<!-- To use the plugin goals in your POM or parent POM -->
 		<plugins>
+			<!-- 
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.4</version>
+				<configuration>
+					<finalName>scratchpad-client</finalName>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<mainClass>com.ehutson.scratchpad.App</mainClass>
+							<classpathPrefix>dependency-jars/</classpathPrefix>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+			 -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>${maven.compiler.source}</source>
+					<target>${maven.compiler.target}</target>
+				</configuration>
+			</plugin>
+			 
+			 <plugin>
+        		<groupId>org.codehaus.mojo</groupId>
+        		<artifactId>exec-maven-plugin</artifactId>
+        		<version>1.6.0</version>
+        		<configuration>
+             		<mainClass>com.ehutson.scratchpad.server.ScratchpadServer</mainClass>
+        		</configuration>
+        	</plugin>
+			 
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>scratchpad-client</id>
+						<goals>
+							<goal>attached</goal>
+						</goals>
+						<phase>package</phase>
+						<configuration>
+							<finalName>scratchpad-client</finalName>
+							<descriptorRefs>
+								<descriptorRef>jar-with-dependencies</descriptorRef>
+							</descriptorRefs>
+							<archive>
+								<manifest>
+									<mainClass>com.ehutson.scratchpad.App</mainClass>
+								</manifest>
+							</archive>
+						</configuration>
+					</execution>
+					<execution>
+						<id>scratchpad-server</id>
+						<goals>
+							<goal>attached</goal>
+						</goals>
+						<phase>package</phase>
+						<configuration>
+							<finalName>scratchpad-server</finalName>
+							<descriptorRefs>
+								<descriptorRef>jar-with-dependencies</descriptorRef>
+							</descriptorRefs>
+							<archive>
+								<manifest>
+									<mainClass>com.ehutson.scratchpad.server.ScratchpadServer</mainClass>
+								</manifest>
+							</archive>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>

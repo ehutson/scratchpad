@@ -3,8 +3,6 @@ package com.ehutson.test1;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ehutson.test1.ZookeeperService;
-
 public class ZookeeperSample {
 
 	private static final Logger logger = LoggerFactory.getLogger(ZookeeperSample.class);
