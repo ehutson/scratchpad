@@ -1,0 +1,26 @@
+syntax = "proto2";
+
+package com.ehutson.scratchpad.proto;
+
+option optimize_for = SPEED;
+
+message QueryRequest {
+    enum RequestType {
+        GET = 1;
+        SET = 2;
+        DEL = 3;
+    }
+
+    required RequestType requestType = 1;
+    optional string requestKey = 2;
+    optional string requestValue = 3;
+}
+
+message QueryResponse {
+    enum ResponseType {
+        OK = 1;
+        ERROR = 2;
+    }
+    required ResponseType responseType = 1;
+    optional string responseMsg = 2;
+}

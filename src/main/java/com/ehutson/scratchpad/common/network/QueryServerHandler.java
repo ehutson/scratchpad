@@ -1,110 +1,91 @@
 package com.ehutson.scratchpad.common.network;
 
+import com.ehutson.scratchpad.common.database.Connection;
+import com.ehutson.scratchpad.proto.ScratchpadProtocol.QueryRequest;
+import com.ehutson.scratchpad.proto.ScratchpadProtocol.QueryRequest.RequestType;
+import com.ehutson.scratchpad.proto.ScratchpadProtocol.QueryResponse;
+import com.ehutson.scratchpad.proto.ScratchpadProtocol.QueryResponse.Builder;
+import com.ehutson.scratchpad.proto.ScratchpadProtocol.QueryResponse.ResponseType;
+import com.google.protobuf.ByteString;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ehutson.scratchpad.common.Query;
-import com.ehutson.scratchpad.common.Query.QueryResult;
-import com.ehutson.scratchpad.common.database.Connection;
-import com.ehutson.scratchpad.common.database.ConnectionPool;
 
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+public class QueryServerHandler extends SimpleChannelInboundHandler<QueryRequest> {
 
-public class QueryServerHandler extends SimpleChannelInboundHandler<Query> {
+    private static final Logger logger = LoggerFactory.getLogger(QueryServerHandler.class);
 
-	private static final Logger logger = LoggerFactory.getLogger(QueryServerHandler.class);
+    private Connection databaseConnection;
 
-	private ConnectionPool connectionPool;
+    public QueryServerHandler(Connection databaseConnection) {
+        this.databaseConnection = databaseConnection;
+    }
 
-	public QueryServerHandler(ConnectionPool connectionPool) {
-		this.connectionPool = connectionPool;
-	}
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, QueryRequest msg) throws Exception {
 
-	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, Query msg) throws Exception {
-		switch (msg.getQueryType()) {
-		case PUT:
-			doPut(msg);
-			break;
-		case GET:
-			doGet(msg);
-			break;
-		case UPDATE:
-			doUpdate(msg);
-			break;
-		case DELETE:
-			doDelete(msg);
-			break;
-		default:
-			break;
-		}
+        Builder builder = QueryResponse.newBuilder();
 
-		ctx.writeAndFlush(msg);
-	}
+        if (msg.getRequestType() == RequestType.GET) {
+            doGet(builder, msg);
+        } else if (msg.getRequestType() == RequestType.SET) {
+            doSet(builder, msg);
+        } else if (msg.getRequestType() == RequestType.DEL) {
+            doDelete(builder, msg);
+        }
 
-	protected void doGet(Query query) {
-		Connection connection = null;
-		try {
-			connection = connectionPool.getConnection();
-			byte[] value = connection.getConnection().get(query.getKeyBytes());
-			query.setValue(value);
-			query.setQueryResult(QueryResult.OK);
-		} catch (Exception e) {
-			logger.error("Unable to get value", e);
-			query.setQueryResult(QueryResult.ERROR);
-		} finally {
-			if (connection != null) {
-				try {
-					connectionPool.releaseConnection(connection);
-				} catch (Exception e) {
-					logger.debug("Unable to release connection", e);
-				}
-			}
-		}
-	}
+        ctx.write(builder.build());
+    }
 
-	protected void doPut(Query query) {
-		Connection connection = null;
-		try {
-			connection = connectionPool.getConnection();
-			connection.getConnection().put(query.getKeyBytes(), query.getValue());
-			query.setQueryResult(QueryResult.OK);
-		} catch (Exception e) {
-			logger.error("Unable to get value", e);
-			query.setQueryResult(QueryResult.ERROR);
-		} finally {
-			if (connection != null) {
-				try {
-					connectionPool.releaseConnection(connection);
-				} catch (Exception e) {
-					logger.debug("Unable to release connection", e);
-				}
-			}
-		}
-	}
+    @Override
+    public void channelReadComplete(ChannelHandlerContext ctx) {
+        ctx.flush();
+    }
 
-	protected void doUpdate(Query query) {
-		doPut(query);
-	}
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        logger.error("Unknown Exception", cause);
+        ctx.close();
+    }
 
-	protected void doDelete(Query query) {
-		Connection connection = null;
-		try {
-			connection = connectionPool.getConnection();
-			connection.getConnection().delete(query.getKeyBytes());
-			query.setQueryResult(QueryResult.OK);
-		} catch (Exception e) {
-			logger.error("Unable to get value", e);
-			query.setQueryResult(QueryResult.ERROR);
-		} finally {
-			if (connection != null) {
-				try {
-					connectionPool.releaseConnection(connection);
-				} catch (Exception e) {
-					logger.debug("Unable to release connection", e);
-				}
-			}
-		}
-	}
+    protected void doGet(Builder builder, QueryRequest query) {
+        try {
+            byte[] value = databaseConnection.getConnection().get(
+                    query.getRequestKeyBytes().toByteArray()
+            );
+            builder.setResponseMsgBytes(ByteString.copyFrom(value));
+            builder.setResponseType(ResponseType.OK);
+        } catch (Exception e) {
+            handleError(builder, "Unable to get value for " + query.getRequestKey(), e);
+        }
+    }
+
+    protected void doSet(Builder builder, QueryRequest query) {
+        try {
+            databaseConnection.getConnection().put(
+                    query.getRequestKeyBytes().toByteArray(),
+                    query.getRequestValueBytes().toByteArray()
+            );
+            builder.setResponseType(ResponseType.OK);
+        } catch (Exception e) {
+            handleError(builder, "Unable to set value for " + query.getRequestKey(), e);
+        }
+    }
+
+    protected void doDelete(Builder builder, QueryRequest query) {
+        try {
+            databaseConnection.getConnection().delete(query.getRequestKeyBytes().toByteArray());
+            builder.setResponseType(ResponseType.OK);
+        } catch (Exception e) {
+            handleError(builder, "Unable to delete value for " + query.getRequestKey(), e);
+        }
+    }
+
+    private void handleError(Builder builder, String errorMessage, Exception exception) {
+        logger.error(errorMessage, exception);
+        builder.setResponseType(ResponseType.ERROR);
+        builder.setResponseMsg(errorMessage);
+    }
 }
