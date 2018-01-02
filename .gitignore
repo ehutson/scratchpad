@@ -1,0 +1,7 @@
+target/
+.classpath
+.project
+.settings/
+.idea
+scratchpad.iml
+.sts4-cache
