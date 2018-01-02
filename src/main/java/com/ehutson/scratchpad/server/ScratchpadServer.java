@@ -29,18 +29,16 @@ public class ScratchpadServer {
         logger.info("Starting new QueryServer on port " + port);
         try (QueryServer server = new QueryServer(port, databaseConnection)) {
 
-            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        logger.info("Shutting Down");
-                        logger.info("Closing server connections");
-                        server.close();
-                        logger.info("Closing database connection");
-                        databaseConnection.close();
-                        logger.info("Done");
-                    } catch (IOException e) {
-                        System.out.println(e.getMessage());
-                    }
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                try {
+                    logger.info("Shutting Down");
+                    logger.info("Closing server connections");
+                    server.close();
+                    logger.info("Closing database connection");
+                    databaseConnection.close();
+                    logger.info("Done");
+                } catch (IOException e) {
+                    System.out.println(e.getMessage());
                 }
             }));
 
